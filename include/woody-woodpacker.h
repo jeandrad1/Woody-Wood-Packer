@@ -13,7 +13,7 @@
 
 	// Utils define
 	#define	KEY_SIZE 16
-	#define	STUB_SIZE 240		// Tamaño del stub bytecode (src/stub.bin)
+	#define STUB_SIZE 328		// Tamaño del stub bytecode (src/stub.bin)
 
 	// Constantes ELF
 	#define EI_NIDENT 16	//Tamaño del array
