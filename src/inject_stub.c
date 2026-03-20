@@ -141,9 +141,12 @@ int	inject_stub(void *file, size_t file_size, unsigned char *key,
 	*/
 	size_t stub_offset = (file_size + 0xFFF) & ~(size_t)0xFFF;
 
+	uint64_t relative_seg_addr = pt_exec->p_vaddr - stub_vaddr;
+	uint64_t relative_orig_entry = orig_entry - stub_vaddr;
+
 	/* Copiar bytecode base y parchear placeholders */
 	memcpy(stub, stub_bin, STUB_SIZE);
-	patch_stub(stub, pt_exec->p_vaddr, pt_exec->p_filesz, orig_entry, key);
+	patch_stub(stub, relative_seg_addr, pt_exec->p_filesz, relative_orig_entry, key);
 
 	/*
 	** Convertir PT_NOTE en PT_LOAD ejecutable que mapea el stub.

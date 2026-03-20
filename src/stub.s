@@ -5,6 +5,24 @@ global stub_end
 
 stub_start:
 
+; Guardar todos los registros y flags
+    push    rax
+    push    rbx
+    push    rcx
+    push    rdx
+    push    rsi
+    push    rdi
+    push    rbp
+    push    r8
+    push    r9
+    push    r10
+    push    r11
+    push    r12
+    push    r13
+    push    r14
+    push    r15
+    pushfq
+
 ; ============================================================
 ; 1. PRINT "....WOODY...."
 ; ============================================================
@@ -20,7 +38,9 @@ stub_start:
 ;    syscall 10 = mprotect
 ;    rdi = addr (page-aligned), rsi = len, rdx = prot
 ; ============================================================
+    lea     r12, [rel stub_start]       ; r12 = base en runtime
     mov     rdi, [rel seg_addr]
+    add     rdi, r12                    ; rdi = dirección absoluta segmento
     and     rdi, -4096                  ; alinear a página (addr & ~0xFFF)
     mov     rsi, [rel seg_size]
     add     rsi, 4095                   ; redondear tamaño al alza
@@ -32,7 +52,9 @@ stub_start:
 ; ============================================================
 ; 3. DESENCRIPTAR SEGMENTO (XOR con clave de KEY_SIZE bytes)
 ; ============================================================
-    mov     rdi, [rel seg_addr]         ; dirección virtual del segmento cifrado
+    lea     r12, [rel stub_start]
+    mov     rdi, [rel seg_addr]         ; offset relativo
+    add     rdi, r12                    ; rdi = dirección virtual absoluta
     mov     rcx, [rel seg_size]         ; tamaño en bytes del segmento
     lea     rbx, [rel key]              ; puntero a los 16 bytes de clave
     xor     r9, r9                      ; índice de clave = 0
@@ -56,7 +78,9 @@ stub_start:
 ; 4. mprotect(seg_addr, seg_size, PROT_READ|PROT_EXEC)
 ;    Restaurar permisos originales del segmento
 ; ============================================================
+    lea     r12, [rel stub_start]
     mov     rdi, [rel seg_addr]
+    add     rdi, r12
     and     rdi, -4096
     mov     rsi, [rel seg_size]
     add     rsi, 4095
@@ -68,8 +92,28 @@ stub_start:
 ; ============================================================
 ; 5. SALTAR AL ENTRY POINT ORIGINAL
 ; ============================================================
-    mov     rax, [rel orig_entry]
-    jmp     rax
+
+    lea     r11, [rel stub_start]
+    add     r11, [rel orig_entry]       ; r11 = dirección absoluta a saltar
+
+    popfq
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    add     rsp, 8                      ; En lugar de 'pop r11', ignoramos para mantener nuestro r11 intacto
+    pop     r10
+    pop     r9
+    pop     r8
+    pop     rbp
+    pop     rdi
+    pop     rsi
+    pop     rdx
+    pop     rcx
+    pop     rbx
+    pop     rax
+
+    jmp     r11
 
 ; ============================================================
 ; DATOS — placeholders rellenados por inject_stub() en C
