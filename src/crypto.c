@@ -1,4 +1,5 @@
 #include "woody-woodpacker.h"
+#include <ctype.h>
 
 void	generate_random_key(unsigned char* key, size_t len){
 	int		fd;
@@ -70,4 +71,27 @@ void xor_encrypt(unsigned char *data, size_t len, unsigned char *key, size_t key
         data[i] ^= key[i % key_len];
 		i++;
     }
+}
+
+int parse_hex_key(const char *hex_str, unsigned char *key, size_t key_len) {
+    size_t len = strlen(hex_str);
+    if (len > key_len * 2) {
+        fprintf(stderr, "Error: Key is too long. Maximum length is %zu hex characters.\n", key_len * 2);
+        return -1;
+    }
+
+	for (size_t i = 0; i < len; i++) {
+		if (!isxdigit(hex_str[i])) {
+			fprintf(stderr, "Error: Invalid character in key. Only hex characters are allowed.\n");
+			return -1;
+		}
+	}
+
+    memset(key, 0, key_len);
+
+    for (size_t i = 0; i < len; i += 2) {
+        char byte_str[3] = {hex_str[i], (i + 1 < len) ? hex_str[i+1] : '0', 0};
+        key[i/2] = (unsigned char)strtol(byte_str, NULL, 16);
+    }
+    return 0;
 }

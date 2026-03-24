@@ -8,10 +8,23 @@ int	main(int argc, char **argv)
 	void			*file;
 	unsigned char	key[KEY_SIZE];
 	uint64_t		orig_entry;
+	char			*file_path = NULL;
+	char			*key_str = NULL;
 
-	if (argc != 2)
-		return (printf("Usage: ./woody_woodpacker <elf file>\n"), EXIT_FAILURE);
-	fd = open(argv[1], O_RDONLY);
+	if (argc != 2 && argc != 4)
+		return (printf("Usage: ./woody_woodpacker <elf file> [-k key]\n"), EXIT_FAILURE);
+
+	file_path = argv[1];
+
+	if (argc == 4)
+	{
+		if (strcmp(argv[2], "-k") == 0)
+			key_str = argv[3];
+		else
+			return (printf("Usage: ./woody_woodpacker <elf file> [-k key]\n"), EXIT_FAILURE);
+	}
+
+	fd = open(file_path, O_RDONLY);
 	if (fd < 0)
 		return (perror("Error opening file"), EXIT_FAILURE);
 	file_size = get_file_size(fd);
@@ -28,7 +41,13 @@ int	main(int argc, char **argv)
 			munmap(file, total_size), close(fd), EXIT_FAILURE);
 	if (parse_elf64(file, file_size) != 0)
 		return (munmap(file, total_size), close(fd), EXIT_FAILURE);
-	generate_random_key(key, KEY_SIZE);
+	if (key_str)
+	{
+		if (parse_hex_key(key_str, key, KEY_SIZE) != 0)
+			return (munmap(file, total_size), close(fd), EXIT_FAILURE);
+	}
+	else
+		generate_random_key(key, KEY_SIZE);
 	print_key(key, KEY_SIZE);
 	/* Guardar entry point original antes de modificar el ELF */
 	orig_entry = ((Elf64_Ehdr *)file)->e_entry;

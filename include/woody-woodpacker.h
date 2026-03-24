@@ -83,7 +83,8 @@
 	size_t		find_encrypted_segment_size(void *file);
 
 	//Crypto
-	void	generate_random_key(unsigned char *key, size_t len);
+	void		generate_random_key(unsigned char *key, size_t len);
+	int			parse_hex_key(const char *hex_str, unsigned char *key, size_t key_len);
 	int		encrypt_segment(void *file, size_t size, unsigned char *key);
 	void	xor_encrypt(unsigned char *data, size_t len, unsigned char *key, size_t key_len);
 
